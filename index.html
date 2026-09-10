@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="it">
+<html lang="it" data-theme="day">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-  <meta name="theme-color" content="#111111">
+  <meta name="theme-color" content="#e9edf2">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Chess Clock">
@@ -17,27 +17,55 @@
       --orange-1:#fbb040;
       --orange-2:#f15a29;
       --danger:#ff2828;
-      --bg:#101010;
-      --panel:#191919;
-      --line:rgba(255,255,255,.16);
+      --app-bg:#e9edf2;
+      --setup-bg:radial-gradient(circle at 50% 42%,#ffffff 0,#edf0f3 58%,#cfd5db 100%);
+      --setup-text:#151515;
+      --setup-sub:#555d66;
+      --setup-footer:#5f6872;
+      --modal-bg:#ffffff;
+      --modal-text:#171717;
+      --modal-copy:#3f454b;
+      --modal-small:#6d747b;
+      --modal-border:rgba(0,0,0,.14);
+      --modal-shadow:0 18px 60px rgba(0,0,0,.28);
+    }
+    html[data-theme="night"]{
+      --app-bg:#070a0e;
+      --setup-bg:radial-gradient(circle at 50% 42%,#26303c 0,#10151c 58%,#030507 100%);
+      --setup-text:#ffffff;
+      --setup-sub:#b9c3ce;
+      --setup-footer:#9ca8b5;
+      --modal-bg:#151a20;
+      --modal-text:#ffffff;
+      --modal-copy:#d8dee5;
+      --modal-small:#a7b1bc;
+      --modal-border:rgba(255,255,255,.16);
+      --modal-shadow:0 18px 60px rgba(0,0,0,.60);
     }
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:manipulation;user-select:none}
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--app-bg);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:manipulation;user-select:none}
     button{font:inherit}
-    #app{width:100%;height:100%;min-height:100dvh;position:relative;display:flex;background:#111}
+    #app{width:100%;height:100%;min-height:100dvh;position:relative;display:flex;background:var(--app-bg);transition:background .25s ease}
     .player{
       flex:1;display:flex;align-items:center;justify-content:center;position:relative;
-      border:0;cursor:pointer;transition:filter .12s ease,background .12s ease,box-shadow .12s ease;
+      border:0;cursor:pointer;transition:filter .16s ease,background .25s ease,box-shadow .16s ease,color .25s ease;
       padding:max(18px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));
     }
     .player.black{background:#050505;color:#fff}
     .player.white{background:#fafafa;color:#111}
+    html[data-theme="night"] .player.black{background:radial-gradient(circle at 35% 45%,#11161c 0,#06090d 58%,#010203 100%);color:#fff}
+    html[data-theme="night"] .player.white{background:radial-gradient(circle at 65% 38%,#34485f 0,#202c3a 54%,#131b25 100%);color:#f5f8fc}
+    html[data-theme="night"] .player.white::after{
+      content:"";position:absolute;inset:0;pointer-events:none;
+      background:linear-gradient(145deg,rgba(255,255,255,.07),transparent 34%,rgba(111,169,224,.035) 68%,transparent);
+    }
     .player.active{box-shadow:inset 0 0 0 8px rgba(242,151,70,.9),inset 0 0 40px rgba(242,151,70,.35)}
     .player.low.active{animation:dangerPulse .5s steps(1,end) infinite}
     .player.lost{background:var(--danger)!important;color:white!important;animation:none}
-    .time{font-variant-numeric:tabular-nums;letter-spacing:-.055em;font-weight:900;font-size:clamp(64px,18vw,210px);line-height:.9;text-align:center;text-shadow:0 2px 0 rgba(0,0,0,.14)}
+    .time{position:relative;z-index:1;font-variant-numeric:tabular-nums;letter-spacing:-.055em;font-weight:900;font-size:clamp(64px,18vw,210px);line-height:.9;text-align:center;text-shadow:0 2px 0 rgba(0,0,0,.14)}
     .black .time{text-shadow:0 2px 0 #000,0 0 24px rgba(255,255,255,.07)}
-    .player-label{position:absolute;bottom:clamp(15px,4vh,34px);font-size:clamp(12px,2.2vw,18px);font-weight:800;letter-spacing:.16em;opacity:.45}
+    html[data-theme="night"] .white .time{text-shadow:0 2px 0 rgba(0,0,0,.42),0 0 26px rgba(199,225,255,.08)}
+    .player-label{position:absolute;z-index:2;bottom:clamp(15px,4vh,34px);font-size:clamp(12px,2.2vw,18px);font-weight:800;letter-spacing:.16em;opacity:.48}
     .black .player-label{left:clamp(16px,3vw,30px)}
     .white .player-label{right:clamp(16px,3vw,30px)}
 
@@ -53,10 +81,10 @@
     .main-btn.reset{background:radial-gradient(circle at 45% 40%,#f8b246 0,#eb702e 55%,#a7380c 100%)}
     .main-btn:active{transform:scale(.96)}
 
-    .setup{position:absolute;inset:0;z-index:30;display:grid;place-items:center;background:radial-gradient(circle at 50% 42%,#2a2a2a 0,#111 58%,#050505 100%);color:white;padding:24px}
+    .setup{position:absolute;inset:0;z-index:30;display:grid;place-items:center;background:var(--setup-bg);color:var(--setup-text);padding:24px;transition:background .25s ease,color .25s ease}
     .setup-card{width:min(620px,94vw);text-align:center}
     .setup h1{margin:0 0 6px;font-size:clamp(30px,7vw,58px);line-height:1;font-weight:1000;letter-spacing:-.04em}
-    .setup p{margin:0 0 28px;opacity:.65;font-size:clamp(14px,2.6vw,18px)}
+    .setup p{margin:0 0 28px;color:var(--setup-sub);font-size:clamp(14px,2.6vw,18px)}
     .time-grid{display:grid;grid-template-columns:repeat(3,minmax(95px,1fr));gap:12px;max-width:520px;margin:auto}
     .time-choice{
       border:0;border-radius:16px;padding:15px 10px;color:white;font-weight:900;font-size:clamp(16px,3.5vw,24px);cursor:pointer;
@@ -64,20 +92,28 @@
     }
     .time-choice:active{transform:scale(.97)}
     .time-choice.wide{grid-column:2}
-    .setup-footer{margin-top:22px;font-size:12px;opacity:.38}
+    .setup-footer{margin-top:22px;font-size:12px;color:var(--setup-footer)}
 
-    .toolbar{position:absolute;top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));z-index:40;display:flex;gap:8px}
-    .tool-btn{width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(20,20,20,.68);backdrop-filter:blur(10px);color:white;cursor:pointer;font-size:19px;display:grid;place-items:center}
+    .toolbar{position:absolute;top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));z-index:40;display:flex;gap:7px}
+    .tool-btn{width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(20,20,20,.72);backdrop-filter:blur(10px);color:white;cursor:pointer;font-size:19px;display:grid;place-items:center;box-shadow:0 3px 10px rgba(0,0,0,.16)}
     .tool-btn:active{transform:scale(.96)}
-    .tool-btn.off{opacity:.46}
+    .tool-btn.off{opacity:.48}
+    .tool-btn.cancel{font-size:21px;background:rgba(142,28,28,.82)}
+    .tool-btn[hidden]{display:none!important}
 
     .modal{position:absolute;inset:0;z-index:60;display:none;place-items:center;background:rgba(0,0,0,.72);padding:20px}
     .modal.open{display:grid}
-    .modal-card{width:min(520px,94vw);max-height:84vh;overflow:auto;background:#171717;color:#fff;border:1px solid rgba(255,255,255,.16);border-radius:22px;padding:24px;box-shadow:0 18px 60px rgba(0,0,0,.55)}
+    .modal-card{width:min(520px,94vw);max-height:84vh;overflow:auto;background:var(--modal-bg);color:var(--modal-text);border:1px solid var(--modal-border);border-radius:22px;padding:24px;box-shadow:var(--modal-shadow);transition:background .25s ease,color .25s ease}
     .modal-card h2{margin:0 0 12px;font-size:26px}
-    .modal-card p{line-height:1.45;color:#ddd}
-    .modal-card .small{font-size:13px;color:#aaa}
-    .close-btn{width:100%;margin-top:12px;padding:12px;border:0;border-radius:12px;background:linear-gradient(135deg,var(--orange-1),var(--orange-2));font-weight:900;color:#fff;cursor:pointer}
+    .modal-card p{line-height:1.45;color:var(--modal-copy)}
+    .modal-card .small{font-size:13px;color:var(--modal-small)}
+    .close-btn,.confirm-btn,.keep-btn{width:100%;margin-top:12px;padding:12px;border:0;border-radius:12px;font-weight:900;cursor:pointer}
+    .close-btn{background:linear-gradient(135deg,var(--orange-1),var(--orange-2));color:#fff}
+    .confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+    .confirm-actions button{margin:0}
+    .keep-btn{background:#e5e8eb;color:#1c2228}
+    html[data-theme="night"] .keep-btn{background:#303943;color:#fff}
+    .confirm-btn{background:linear-gradient(135deg,#ff735e,#c92323);color:#fff}
 
     @keyframes dangerPulse{0%,49%{background:var(--danger);color:#fff}50%,100%{}}
     @media (orientation:portrait){
@@ -90,9 +126,18 @@
       .time-grid{grid-template-columns:repeat(2,minmax(110px,1fr));max-width:380px}
       .time-choice.wide{grid-column:auto}
       .setup h1{font-size:clamp(34px,11vw,58px)}
+      .toolbar{gap:5px}
+      .tool-btn{width:39px;height:39px;font-size:18px}
+    }
+    @media (max-width:390px){
+      .toolbar{top:max(7px,env(safe-area-inset-top));right:max(7px,env(safe-area-inset-right));gap:4px}
+      .tool-btn{width:36px;height:36px;font-size:16px}
+      .tool-btn.cancel{font-size:19px}
     }
     @media (max-height:460px){
       .setup p{margin-bottom:14px}.time-choice{padding:10px}.setup-footer{margin-top:10px}.time-grid{gap:8px}
+      .toolbar{top:max(6px,env(safe-area-inset-top));right:max(6px,env(safe-area-inset-right))}
+      .tool-btn{width:36px;height:36px;font-size:16px}
     }
   </style>
 </head>
@@ -125,7 +170,10 @@
     </section>
 
     <div class="toolbar">
+      <button class="tool-btn cancel" id="cancelGameButton" aria-label="Annulla partita" title="Annulla partita" hidden>↩</button>
+      <button class="tool-btn" id="themeButton" aria-label="Passa alla modalità notte" title="Giorno / Notte">🌙</button>
       <button class="tool-btn" id="soundButton" aria-label="Attiva o disattiva suoni" title="Suoni">🔊</button>
+      <button class="tool-btn" id="fullscreenButton" aria-label="Attiva tutto schermo" title="Tutto schermo">⛶</button>
       <button class="tool-btn" id="infoButton" aria-label="Informazioni" title="Informazioni">ⓘ</button>
     </div>
 
@@ -134,9 +182,21 @@
         <h2 id="infoTitle">CHESS CLOCK!</h2>
         <p>Scegli il tempo, premi <b>START</b> e tocca la tua metà dell'orologio alla fine della mossa. Il turno passa automaticamente all'avversario.</p>
         <p>Sotto i 10 secondi l'area del giocatore attivo lampeggia in rosso e viene riprodotto un segnale acustico. A zero il tempo si arresta.</p>
-        <p class="small">Funziona anche offline dopo il primo caricamento. Per una partita nuova, dopo la fine premi RESET e poi START. Per cambiare durata, ricarica l'app.</p>
+        <p class="small">Puoi passare in ogni momento fra modalità Giorno e Notte. Il pulsante ↩ annulla la partita corrente, dopo conferma, e riporta alla scelta del tempo. Il pulsante ⛶ attiva o disattiva la visualizzazione a tutto schermo quando il dispositivo lo consente.</p>
+        <p class="small">Funziona anche offline dopo il primo caricamento.</p>
         <p class="small">Ideazione e programmazione originale: prof. Flavio Naretti.</p>
         <button class="close-btn" id="closeInfo">CHIUDI</button>
+      </div>
+    </div>
+
+    <div class="modal" id="cancelModal" role="dialog" aria-modal="true" aria-labelledby="cancelTitle">
+      <div class="modal-card">
+        <h2 id="cancelTitle">Annullare la partita?</h2>
+        <p>La partita corrente verrà interrotta e tornerai alla schermata iniziale per scegliere un nuovo tempo.</p>
+        <div class="confirm-actions">
+          <button class="keep-btn" id="keepGameButton">NO, CONTINUA</button>
+          <button class="confirm-btn" id="confirmCancelButton">SÌ, ANNULLA</button>
+        </div>
       </div>
     </div>
 
@@ -158,7 +218,12 @@
   const whiteTime = $('#whiteTime');
   const mainButton = $('#mainButton');
   const soundButton = $('#soundButton');
+  const themeButton = $('#themeButton');
+  const fullscreenButton = $('#fullscreenButton');
+  const cancelGameButton = $('#cancelGameButton');
   const infoModal = $('#infoModal');
+  const cancelModal = $('#cancelModal');
+  const themeColorMeta = document.querySelector('meta[name="theme-color"]');
   const sounds = {coin:$('#sndCoin'), turn:$('#sndTurn'), start:$('#sndStart'), pause:$('#sndPause'), lose:$('#sndLose')};
 
   let initialMs = 15 * 60 * 1000;
@@ -168,8 +233,10 @@
   let lastTs = 0;
   let raf = 0;
   let soundOn = localStorage.getItem('chessClockSound') !== 'off';
+  let theme = localStorage.getItem('chessClockTheme') === 'night' ? 'night' : 'day';
   let lastHalfTick = null;
   let wakeLock = null;
+  let resumeAfterCancelDialog = false;
 
   function play(name){
     if(!soundOn) return;
@@ -195,11 +262,13 @@
     whitePlayer.classList.toggle('low', state === 'active' && turn === 'white' && remaining.white < 10000);
     blackPlayer.classList.toggle('lost', state === 'finished' && remaining.black <= 0);
     whitePlayer.classList.toggle('lost', state === 'finished' && remaining.white <= 0);
+    cancelGameButton.hidden = state === 'choose';
 
     if(state === 'ready'){ mainButton.hidden=false; mainButton.textContent='START'; mainButton.className='main-btn'; }
     else if(state === 'active'){ mainButton.hidden=false; mainButton.textContent='PAUSA'; mainButton.className='main-btn pause'; }
     else if(state === 'paused'){ mainButton.hidden=false; mainButton.textContent='START'; mainButton.className='main-btn'; }
     else if(state === 'finished'){ mainButton.hidden=false; mainButton.textContent='RESET'; mainButton.className='main-btn reset'; }
+    else { mainButton.hidden=true; }
   }
 
   function chooseTime(minutes){
@@ -213,6 +282,15 @@
     render();
   }
 
+  function applyTheme(){
+    document.documentElement.dataset.theme = theme;
+    const isNight = theme === 'night';
+    themeButton.textContent = isNight ? '☀️' : '🌙';
+    themeButton.setAttribute('aria-label', isNight ? 'Passa alla modalità giorno' : 'Passa alla modalità notte');
+    themeButton.title = isNight ? 'Modalità giorno' : 'Modalità notte';
+    if(themeColorMeta) themeColorMeta.content = isNight ? '#070a0e' : '#e9edf2';
+  }
+
   async function requestWakeLock(){
     try{
       if('wakeLock' in navigator && state === 'active') wakeLock = await navigator.wakeLock.request('screen');
@@ -222,9 +300,9 @@
     if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; }
   }
 
-  function startClock(){
+  function startClock(withSound=true){
     if(state !== 'ready' && state !== 'paused') return;
-    play('start');
+    if(withSound) play('start');
     state='active';
     lastTs=performance.now();
     lastHalfTick=null;
@@ -278,7 +356,6 @@
 
   function endTurn(player){
     if(state !== 'active' || turn !== player) return;
-    // aggiorna fino all'istante preciso del tocco prima del cambio turno
     const now=performance.now();
     remaining[turn]-=(now-lastTs);
     if(remaining[turn] <= 0){
@@ -289,6 +366,79 @@
     turn = turn === 'white' ? 'black' : 'white';
     lastHalfTick=null;
     render();
+  }
+
+  function freezeForCancelDialog(){
+    resumeAfterCancelDialog = state === 'active';
+    if(state === 'active'){
+      const now=performance.now();
+      remaining[turn]-=(now-lastTs);
+      if(remaining[turn] <= 0){
+        remaining[turn]=0;
+        state='finished';
+        resumeAfterCancelDialog=false;
+        play('lose');
+      } else {
+        state='paused';
+      }
+      cancelAnimationFrame(raf);
+      releaseWakeLock();
+      render();
+    }
+  }
+
+  function openCancelDialog(){
+    if(state === 'choose') return;
+    freezeForCancelDialog();
+    cancelModal.classList.add('open');
+  }
+
+  function keepCurrentGame(){
+    cancelModal.classList.remove('open');
+    const shouldResume = resumeAfterCancelDialog && state === 'paused';
+    resumeAfterCancelDialog=false;
+    if(shouldResume) startClock(false);
+  }
+
+  function returnHome(){
+    resumeAfterCancelDialog=false;
+    cancelAnimationFrame(raf);
+    releaseWakeLock();
+    state='choose';
+    turn='white';
+    remaining.white=initialMs;
+    remaining.black=initialMs;
+    lastHalfTick=null;
+    cancelModal.classList.remove('open');
+    setup.style.display='grid';
+    render();
+  }
+
+  function isFullscreen(){
+    return !!(document.fullscreenElement || document.webkitFullscreenElement);
+  }
+
+  async function toggleFullscreen(){
+    try{
+      if(isFullscreen()){
+        if(document.exitFullscreen) await document.exitFullscreen();
+        else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
+        return;
+      }
+      const el=document.documentElement;
+      if(el.requestFullscreen) await el.requestFullscreen();
+      else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+      else if(!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) && !window.navigator.standalone){
+        alert('Su questo dispositivo il tutto schermo dal browser non è disponibile. Su iPhone puoi ottenere la visualizzazione a schermo intero installando CHESS CLOCK! sulla schermata Home.');
+      }
+    }catch(e){}
+  }
+
+  function updateFullscreenButton(){
+    const full=isFullscreen();
+    fullscreenButton.textContent=full?'🗗':'⛶';
+    fullscreenButton.setAttribute('aria-label',full?'Esci da tutto schermo':'Attiva tutto schermo');
+    fullscreenButton.title=full?'Esci da tutto schermo':'Tutto schermo';
   }
 
   document.querySelectorAll('.time-choice').forEach(btn => btn.addEventListener('click', () => chooseTime(btn.dataset.minutes)));
@@ -303,18 +453,27 @@
 
   function updateSoundButton(){ soundButton.textContent=soundOn?'🔊':'🔇'; soundButton.classList.toggle('off',!soundOn); }
   soundButton.addEventListener('click',()=>{soundOn=!soundOn;localStorage.setItem('chessClockSound',soundOn?'on':'off');updateSoundButton();});
+  themeButton.addEventListener('click',()=>{theme=theme==='day'?'night':'day';localStorage.setItem('chessClockTheme',theme);applyTheme();});
+  fullscreenButton.addEventListener('click',toggleFullscreen);
+  cancelGameButton.addEventListener('click',openCancelDialog);
+  $('#keepGameButton').addEventListener('click',keepCurrentGame);
+  $('#confirmCancelButton').addEventListener('click',returnHome);
   $('#infoButton').addEventListener('click',()=>infoModal.classList.add('open'));
   $('#closeInfo').addEventListener('click',()=>infoModal.classList.remove('open'));
   infoModal.addEventListener('click',e=>{if(e.target===infoModal)infoModal.classList.remove('open');});
+  cancelModal.addEventListener('click',e=>{if(e.target===cancelModal)keepCurrentGame();});
+  document.addEventListener('fullscreenchange',updateFullscreenButton);
+  document.addEventListener('webkitfullscreenchange',updateFullscreenButton);
   document.addEventListener('visibilitychange',()=>{
     if(document.visibilityState==='visible' && state==='active'){
       lastTs=performance.now(); requestWakeLock();
     }
   });
 
-  // Evita menu contestuali/zoom accidentali durante la partita.
   document.addEventListener('contextmenu',e=>e.preventDefault());
+  applyTheme();
   updateSoundButton();
+  updateFullscreenButton();
   render();
 
   if('serviceWorker' in navigator){

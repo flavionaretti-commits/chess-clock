@@ -1,4 +1,4 @@
-const CACHE = 'chess-clock-pwa-v1';
+const CACHE = 'chess-clock-pwa-v2';
 const ASSETS = [
   './',
   './index.html',
