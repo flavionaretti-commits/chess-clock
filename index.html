@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#111111">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Chess Clock">
+  <meta name="description" content="Orologio da scacchi installabile e utilizzabile offline.">
+  <title>CHESS CLOCK!</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+  <style>
+    :root {
+      --orange-1:#fbb040;
+      --orange-2:#f15a29;
+      --danger:#ff2828;
+      --bg:#101010;
+      --panel:#191919;
+      --line:rgba(255,255,255,.16);
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:manipulation;user-select:none}
+    button{font:inherit}
+    #app{width:100%;height:100%;min-height:100dvh;position:relative;display:flex;background:#111}
+    .player{
+      flex:1;display:flex;align-items:center;justify-content:center;position:relative;
+      border:0;cursor:pointer;transition:filter .12s ease,background .12s ease,box-shadow .12s ease;
+      padding:max(18px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));
+    }
+    .player.black{background:#050505;color:#fff}
+    .player.white{background:#fafafa;color:#111}
+    .player.active{box-shadow:inset 0 0 0 8px rgba(242,151,70,.9),inset 0 0 40px rgba(242,151,70,.35)}
+    .player.low.active{animation:dangerPulse .5s steps(1,end) infinite}
+    .player.lost{background:var(--danger)!important;color:white!important;animation:none}
+    .time{font-variant-numeric:tabular-nums;letter-spacing:-.055em;font-weight:900;font-size:clamp(64px,18vw,210px);line-height:.9;text-align:center;text-shadow:0 2px 0 rgba(0,0,0,.14)}
+    .black .time{text-shadow:0 2px 0 #000,0 0 24px rgba(255,255,255,.07)}
+    .player-label{position:absolute;bottom:clamp(15px,4vh,34px);font-size:clamp(12px,2.2vw,18px);font-weight:800;letter-spacing:.16em;opacity:.45}
+    .black .player-label{left:clamp(16px,3vw,30px)}
+    .white .player-label{right:clamp(16px,3vw,30px)}
+
+    .center-controls{position:absolute;inset:0;pointer-events:none;display:grid;place-items:center;z-index:10}
+    .main-btn{
+      pointer-events:auto;width:clamp(78px,12vw,112px);height:clamp(78px,12vw,112px);border-radius:50%;border:3px solid rgba(255,255,255,.9);
+      color:#fff;font-weight:950;font-size:clamp(12px,2vw,17px);letter-spacing:.04em;cursor:pointer;
+      background:radial-gradient(circle at 45% 40%,#d7df23 0,#2fa34e 48%,#006838 100%);
+      box-shadow:0 7px 20px rgba(0,0,0,.36),inset 0 0 0 3px rgba(255,255,255,.15);
+      text-shadow:0 1px 2px #073b1f;
+    }
+    .main-btn.pause{background:radial-gradient(circle at 45% 40%,#ffee00 0,#ff4c28 52%,#c00000 100%)}
+    .main-btn.reset{background:radial-gradient(circle at 45% 40%,#f8b246 0,#eb702e 55%,#a7380c 100%)}
+    .main-btn:active{transform:scale(.96)}
+
+    .setup{position:absolute;inset:0;z-index:30;display:grid;place-items:center;background:radial-gradient(circle at 50% 42%,#2a2a2a 0,#111 58%,#050505 100%);color:white;padding:24px}
+    .setup-card{width:min(620px,94vw);text-align:center}
+    .setup h1{margin:0 0 6px;font-size:clamp(30px,7vw,58px);line-height:1;font-weight:1000;letter-spacing:-.04em}
+    .setup p{margin:0 0 28px;opacity:.65;font-size:clamp(14px,2.6vw,18px)}
+    .time-grid{display:grid;grid-template-columns:repeat(3,minmax(95px,1fr));gap:12px;max-width:520px;margin:auto}
+    .time-choice{
+      border:0;border-radius:16px;padding:15px 10px;color:white;font-weight:900;font-size:clamp(16px,3.5vw,24px);cursor:pointer;
+      background:linear-gradient(135deg,var(--orange-1),var(--orange-2));box-shadow:0 6px 16px rgba(0,0,0,.28),inset 0 0 0 2px rgba(255,255,255,.22)
+    }
+    .time-choice:active{transform:scale(.97)}
+    .time-choice.wide{grid-column:2}
+    .setup-footer{margin-top:22px;font-size:12px;opacity:.38}
+
+    .toolbar{position:absolute;top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));z-index:40;display:flex;gap:8px}
+    .tool-btn{width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(20,20,20,.68);backdrop-filter:blur(10px);color:white;cursor:pointer;font-size:19px;display:grid;place-items:center}
+    .tool-btn:active{transform:scale(.96)}
+    .tool-btn.off{opacity:.46}
+
+    .modal{position:absolute;inset:0;z-index:60;display:none;place-items:center;background:rgba(0,0,0,.72);padding:20px}
+    .modal.open{display:grid}
+    .modal-card{width:min(520px,94vw);max-height:84vh;overflow:auto;background:#171717;color:#fff;border:1px solid rgba(255,255,255,.16);border-radius:22px;padding:24px;box-shadow:0 18px 60px rgba(0,0,0,.55)}
+    .modal-card h2{margin:0 0 12px;font-size:26px}
+    .modal-card p{line-height:1.45;color:#ddd}
+    .modal-card .small{font-size:13px;color:#aaa}
+    .close-btn{width:100%;margin-top:12px;padding:12px;border:0;border-radius:12px;background:linear-gradient(135deg,var(--orange-1),var(--orange-2));font-weight:900;color:#fff;cursor:pointer}
+
+    @keyframes dangerPulse{0%,49%{background:var(--danger);color:#fff}50%,100%{}}
+    @media (orientation:portrait){
+      #app{flex-direction:column}
+      .player-label{bottom:auto}
+      .black .player-label{top:18px;left:18px}
+      .white .player-label{bottom:18px;right:18px;top:auto}
+      .time{font-size:clamp(72px,26vw,170px)}
+      .main-btn{width:84px;height:84px}
+      .time-grid{grid-template-columns:repeat(2,minmax(110px,1fr));max-width:380px}
+      .time-choice.wide{grid-column:auto}
+      .setup h1{font-size:clamp(34px,11vw,58px)}
+    }
+    @media (max-height:460px){
+      .setup p{margin-bottom:14px}.time-choice{padding:10px}.setup-footer{margin-top:10px}.time-grid{gap:8px}
+    }
+  </style>
+</head>
+<body>
+  <main id="app" aria-label="Orologio da scacchi">
+    <button class="player black" id="blackPlayer" aria-label="Termina il turno del Nero">
+      <span class="time" id="blackTime">15:00</span><span class="player-label">NERO</span>
+    </button>
+    <button class="player white" id="whitePlayer" aria-label="Termina il turno del Bianco">
+      <span class="time" id="whiteTime">15:00</span><span class="player-label">BIANCO</span>
+    </button>
+
+    <div class="center-controls"><button id="mainButton" class="main-btn" hidden>START</button></div>
+
+    <section class="setup" id="setup">
+      <div class="setup-card">
+        <h1>CHESS CLOCK!</h1>
+        <p>Scegli il tempo per ciascun giocatore</p>
+        <div class="time-grid" id="timeGrid">
+          <button class="time-choice" data-minutes="1">1 min</button>
+          <button class="time-choice" data-minutes="3">3 min</button>
+          <button class="time-choice" data-minutes="5">5 min</button>
+          <button class="time-choice" data-minutes="10">10 min</button>
+          <button class="time-choice" data-minutes="15">15 min</button>
+          <button class="time-choice" data-minutes="30">30 min</button>
+          <button class="time-choice wide" data-minutes="60">60 min</button>
+        </div>
+        <div class="setup-footer">Ideato e programmato da prof. Flavio Naretti</div>
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <button class="tool-btn" id="soundButton" aria-label="Attiva o disattiva suoni" title="Suoni">🔊</button>
+      <button class="tool-btn" id="infoButton" aria-label="Informazioni" title="Informazioni">ⓘ</button>
+    </div>
+
+    <div class="modal" id="infoModal" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
+      <div class="modal-card">
+        <h2 id="infoTitle">CHESS CLOCK!</h2>
+        <p>Scegli il tempo, premi <b>START</b> e tocca la tua metà dell'orologio alla fine della mossa. Il turno passa automaticamente all'avversario.</p>
+        <p>Sotto i 10 secondi l'area del giocatore attivo lampeggia in rosso e viene riprodotto un segnale acustico. A zero il tempo si arresta.</p>
+        <p class="small">Funziona anche offline dopo il primo caricamento. Per una partita nuova, dopo la fine premi RESET e poi START. Per cambiare durata, ricarica l'app.</p>
+        <p class="small">Ideazione e programmazione originale: prof. Flavio Naretti.</p>
+        <button class="close-btn" id="closeInfo">CHIUDI</button>
+      </div>
+    </div>
+
+    <audio id="sndCoin" src="assets/audio/coin.wav" preload="auto"></audio>
+    <audio id="sndTurn" src="assets/audio/end-turn.wav" preload="auto"></audio>
+    <audio id="sndStart" src="assets/audio/start.wav" preload="auto"></audio>
+    <audio id="sndPause" src="assets/audio/pause.wav" preload="auto"></audio>
+    <audio id="sndLose" src="assets/audio/lose.wav" preload="auto"></audio>
+  </main>
+
+<script>
+(() => {
+  'use strict';
+  const $ = s => document.querySelector(s);
+  const setup = $('#setup');
+  const blackPlayer = $('#blackPlayer');
+  const whitePlayer = $('#whitePlayer');
+  const blackTime = $('#blackTime');
+  const whiteTime = $('#whiteTime');
+  const mainButton = $('#mainButton');
+  const soundButton = $('#soundButton');
+  const infoModal = $('#infoModal');
+  const sounds = {coin:$('#sndCoin'), turn:$('#sndTurn'), start:$('#sndStart'), pause:$('#sndPause'), lose:$('#sndLose')};
+
+  let initialMs = 15 * 60 * 1000;
+  let remaining = { white: initialMs, black: initialMs };
+  let turn = 'white';
+  let state = 'choose'; // choose, ready, active, paused, finished
+  let lastTs = 0;
+  let raf = 0;
+  let soundOn = localStorage.getItem('chessClockSound') !== 'off';
+  let lastHalfTick = null;
+  let wakeLock = null;
+
+  function play(name){
+    if(!soundOn) return;
+    const a = sounds[name];
+    if(!a) return;
+    try{a.currentTime = 0; a.play().catch(()=>{});}catch(e){}
+  }
+
+  function format(ms){
+    const sec = Math.max(0, Math.ceil(ms / 1000));
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${String(s).padStart(2,'0')}`;
+  }
+
+  function render(){
+    blackTime.textContent = format(remaining.black);
+    whiteTime.textContent = format(remaining.white);
+
+    blackPlayer.classList.toggle('active', state === 'active' && turn === 'black');
+    whitePlayer.classList.toggle('active', state === 'active' && turn === 'white');
+    blackPlayer.classList.toggle('low', state === 'active' && turn === 'black' && remaining.black < 10000);
+    whitePlayer.classList.toggle('low', state === 'active' && turn === 'white' && remaining.white < 10000);
+    blackPlayer.classList.toggle('lost', state === 'finished' && remaining.black <= 0);
+    whitePlayer.classList.toggle('lost', state === 'finished' && remaining.white <= 0);
+
+    if(state === 'ready'){ mainButton.hidden=false; mainButton.textContent='START'; mainButton.className='main-btn'; }
+    else if(state === 'active'){ mainButton.hidden=false; mainButton.textContent='PAUSA'; mainButton.className='main-btn pause'; }
+    else if(state === 'paused'){ mainButton.hidden=false; mainButton.textContent='START'; mainButton.className='main-btn'; }
+    else if(state === 'finished'){ mainButton.hidden=false; mainButton.textContent='RESET'; mainButton.className='main-btn reset'; }
+  }
+
+  function chooseTime(minutes){
+    play('coin');
+    initialMs = Number(minutes) * 60 * 1000;
+    remaining.white = initialMs;
+    remaining.black = initialMs;
+    turn = 'white';
+    state = 'ready';
+    setup.style.display='none';
+    render();
+  }
+
+  async function requestWakeLock(){
+    try{
+      if('wakeLock' in navigator && state === 'active') wakeLock = await navigator.wakeLock.request('screen');
+    }catch(e){}
+  }
+  function releaseWakeLock(){
+    if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; }
+  }
+
+  function startClock(){
+    if(state !== 'ready' && state !== 'paused') return;
+    play('start');
+    state='active';
+    lastTs=performance.now();
+    lastHalfTick=null;
+    requestWakeLock();
+    render();
+    cancelAnimationFrame(raf);
+    raf=requestAnimationFrame(tick);
+  }
+
+  function pauseClock(){
+    if(state !== 'active') return;
+    play('pause');
+    state='paused';
+    releaseWakeLock();
+    cancelAnimationFrame(raf);
+    render();
+  }
+
+  function resetAfterFinish(){
+    remaining.white=initialMs;
+    remaining.black=initialMs;
+    turn='white';
+    state='ready';
+    lastHalfTick=null;
+    render();
+  }
+
+  function tick(ts){
+    if(state !== 'active') return;
+    const dt = ts - lastTs;
+    lastTs = ts;
+    remaining[turn] -= dt;
+
+    const current = remaining[turn];
+    if(current < 10000 && current > 0){
+      const halfTick = Math.floor(current / 500);
+      if(halfTick !== lastHalfTick){ lastHalfTick = halfTick; play('coin'); }
+    } else lastHalfTick=null;
+
+    if(remaining[turn] <= 0){
+      remaining[turn]=0;
+      state='finished';
+      play('lose');
+      releaseWakeLock();
+      render();
+      return;
+    }
+    render();
+    raf=requestAnimationFrame(tick);
+  }
+
+  function endTurn(player){
+    if(state !== 'active' || turn !== player) return;
+    // aggiorna fino all'istante preciso del tocco prima del cambio turno
+    const now=performance.now();
+    remaining[turn]-=(now-lastTs);
+    if(remaining[turn] <= 0){
+      remaining[turn]=0; state='finished'; play('lose'); releaseWakeLock(); render(); return;
+    }
+    lastTs=now;
+    play('turn');
+    turn = turn === 'white' ? 'black' : 'white';
+    lastHalfTick=null;
+    render();
+  }
+
+  document.querySelectorAll('.time-choice').forEach(btn => btn.addEventListener('click', () => chooseTime(btn.dataset.minutes)));
+  whitePlayer.addEventListener('click', () => endTurn('white'));
+  blackPlayer.addEventListener('click', () => endTurn('black'));
+  mainButton.addEventListener('click', e => {
+    e.stopPropagation();
+    if(state==='ready'||state==='paused') startClock();
+    else if(state==='active') pauseClock();
+    else if(state==='finished') resetAfterFinish();
+  });
+
+  function updateSoundButton(){ soundButton.textContent=soundOn?'🔊':'🔇'; soundButton.classList.toggle('off',!soundOn); }
+  soundButton.addEventListener('click',()=>{soundOn=!soundOn;localStorage.setItem('chessClockSound',soundOn?'on':'off');updateSoundButton();});
+  $('#infoButton').addEventListener('click',()=>infoModal.classList.add('open'));
+  $('#closeInfo').addEventListener('click',()=>infoModal.classList.remove('open'));
+  infoModal.addEventListener('click',e=>{if(e.target===infoModal)infoModal.classList.remove('open');});
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible' && state==='active'){
+      lastTs=performance.now(); requestWakeLock();
+    }
+  });
+
+  // Evita menu contestuali/zoom accidentali durante la partita.
+  document.addEventListener('contextmenu',e=>e.preventDefault());
+  updateSoundButton();
+  render();
+
+  if('serviceWorker' in navigator){
+    window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
+  }
+})();
+</script>
+</body>
+</html>
